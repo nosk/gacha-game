@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ジュースガチャ</title>
+    <title>ジュースガチャ！</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -13,49 +13,89 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            background-color: #f0f8ff;
+            background: linear-gradient(45deg, #ffeb3b, #ff69b4);
             text-align: center;
+            transition: background 0.5s;
         }
         h1 {
-            font-size: 2em;
+            font-size: 2.5em;
             color: #ff4500;
+            text-shadow: 2px 2px 4px #fff;
             margin-bottom: 20px;
+            animation: pulse 1.5s infinite;
         }
         #gacha-button {
-            font-size: 1.5em;
+            font-size: 1.8em;
             padding: 20px 40px;
-            background-color: #32cd32;
+            background: linear-gradient(45deg, #32cd32, #00b7eb);
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 15px;
             cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
             transition: transform 0.2s;
         }
         #gacha-button:hover {
             transform: scale(1.1);
         }
         #result {
-            font-size: 1.8em;
+            font-size: 2em;
             margin-top: 20px;
             color: #ff1493;
+            text-shadow: 1px 1px 3px #fff;
             display: none;
+            animation: bounce 0.5s;
         }
         .spin {
-            animation: spin 1s ease-in-out;
+            animation: spin 1s ease-in-out infinite;
+        }
+        .win {
+            background: linear-gradient(45deg, #ffd700, #ff4500) !important;
+            animation: flash 0.5s alternate infinite;
+        }
+        .lose {
+            background: linear-gradient(45deg, #4682b4, #708090) !important;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+        @keyframes flash {
+            0% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+        .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle, #fff, transparent);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particle 1s ease-out forwards;
+        }
+        @keyframes particle {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0); opacity: 0; }
+        }
         #reset-button {
-            font-size: 1.2em;
+            font-size: 1.3em;
             padding: 10px 20px;
-            background-color: #1e90ff;
+            background: linear-gradient(45deg, #1e90ff, #00b7eb);
             color: white;
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: 15px;
             display: none;
         }
     </style>
@@ -65,35 +105,54 @@
     <button id="gacha-button">ガチャを引く！</button>
     <div id="result"></div>
     <button id="reset-button">もう一度！</button>
+    <audio id="spin-sound" src="spin.mp3"></audio>
+    <audio id="win-sound" src="win.mp3"></audio>
 
     <script>
         const gachaButton = document.getElementById('gacha-button');
         const resultDiv = document.getElementById('result');
         const resetButton = document.getElementById('reset-button');
+        const spinSound = document.getElementById('spin-sound');
+        const winSound = document.getElementById('win-sound');
+
+        function createParticles(count) {
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const angle = Math.random() * 360;
+                const distance = 50 + Math.random() * 100;
+                particle.style.left = `${window.innerWidth / 2 + Math.cos(angle) * distance}px`;
+                particle.style.top = `${window.innerHeight / 2 + Math.sin(angle) * distance}px`;
+                document.body.appendChild(particle);
+                setTimeout(() => particle.remove(), 1000);
+            }
+        }
 
         gachaButton.addEventListener('click', () => {
-            // ボタンを無効化してアニメーション開始
             gachaButton.disabled = true;
             gachaButton.classList.add('spin');
+            if (spinSound) spinSound.play().catch(() => console.log('音声再生エラー'));
+            createParticles(20); // キラキラ効果
 
-            // 1秒後に結果を表示
             setTimeout(() => {
-                // ガチャの結果（30%で当たり）
                 const isWin = Math.random() < 0.3;
                 resultDiv.textContent = isWin ? '🎉 光るブレスレット！ 🎉' : '😔 ハズレ...';
                 resultDiv.style.display = 'block';
+                document.body.className = isWin ? 'win' : 'lose';
+                if (isWin && winSound) winSound.play().catch(() => console.log('音声再生エラー'));
+                if (isWin && 'vibrate' in navigator) navigator.vibrate([200, 100, 200]); // 振動
                 gachaButton.style.display = 'none';
                 resetButton.style.display = 'block';
                 gachaButton.classList.remove('spin');
-            }, 1000);
+            }, 1500);
         });
 
         resetButton.addEventListener('click', () => {
-            // リセット処理
             resultDiv.style.display = 'none';
             gachaButton.style.display = 'block';
             resetButton.style.display = 'none';
             gachaButton.disabled = false;
+            document.body.className = '';
         });
     </script>
 </body>
