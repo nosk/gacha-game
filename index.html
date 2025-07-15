@@ -132,15 +132,28 @@
             gachaButton.disabled = true;
             gachaButton.classList.add('spin');
             if (spinSound) spinSound.play().catch(() => console.log('音声再生エラー'));
-            createParticles(20); // キラキラ効果
+            createParticles(20);
 
             setTimeout(() => {
-                const isWin = Math.random() < 0.3;
-                resultDiv.textContent = isWin ? '🎉 光るブレスレット！ 🎉' : '😔 ハズレ...';
+                const rand = Math.random();
+                let resultText;
+                let isWin = false;
+
+                if (rand < 0.01) { // 1%で両方当たり
+                    resultText = '🎉 光るブレスレット\n＆ジュース１本！ 🎉';
+                    isWin = true;
+                } else if (rand < 0.31) { // 次の30%で光るブレスレット
+                    resultText = '🎉 光るブレスレット！ 🎉';
+                    isWin = true;
+                } else {
+                    resultText = '😔 ハズレ...';
+                }
+
+                resultDiv.innerText = resultText;
                 resultDiv.style.display = 'block';
                 document.body.className = isWin ? 'win' : 'lose';
                 if (isWin && winSound) winSound.play().catch(() => console.log('音声再生エラー'));
-                if (isWin && 'vibrate' in navigator) navigator.vibrate([200, 100, 200]); // 振動
+                if (isWin && 'vibrate' in navigator) navigator.vibrate([200, 100, 200]);
                 gachaButton.style.display = 'none';
                 resetButton.style.display = 'block';
                 gachaButton.classList.remove('spin');
